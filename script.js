@@ -28,8 +28,11 @@ let tasks = [];
 let subjectsList = [];
 let currentEditingId = null;
 
+// +++ เพิ่ม 2 ตัวนี้ครับ +++
+let notifiedTaskIds = new Set(); // ตัวแปรสำหรับจำว่างานไหนแจ้งเตือนไปแล้ว จะได้ไม่แจ้งซ้ำ
+let isNotificationEnabled = true; // ตัวแปรสถานะ เปิด/ปิด การแจ้งเตือน
 // ==========================================
-// 3. ฟังก์ชัน Notification (จากไฟล์ใหม่)
+// 3. ฟังก์ชัน Notification
 // ==========================================
 window.requestNotificationPermission = function() {
     if (!('Notification' in window)) {
@@ -40,6 +43,7 @@ window.requestNotificationPermission = function() {
         if (permission === 'granted') {
             alert('✅ เปิดการแจ้งเตือนเรียบร้อย!');
             showNotification('เปิดใช้งานสำเร็จ!', 'ระบบจะแจ้งเตือนเมื่อมีงานใหม่หรือใกล้กำหนดส่ง');
+            checkDeadlines(); // เช็คงานทันทีหลังจากกดอนุญาต
         } else if (permission === 'denied') {
             alert('❌ คุณปิดกั้นการแจ้งเตือนไว้');
         }
@@ -48,22 +52,56 @@ window.requestNotificationPermission = function() {
 
 function showNotification(title, body) {
     if (Notification.permission === 'granted') {
-        new Notification(title, { body: body, icon: 'https://cdn-icons-png.flaticon.com/512/2285/2285576.png' });
+        new Notification(title, { 
+            body: body, 
+            icon: 'https://cdn-icons-png.flaticon.com/512/2285/2285576.png' 
+        });
     } else {
-        alert(`${title}\n${body}`);
+        console.log(`Notification: ${title} - ${body}`);
     }
+}
+
+function checkDeadlines() {
+    if (Notification.permission !== 'granted') return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const next3Days = new Date(today);
+    next3Days.setDate(next3Days.getDate() + 3);
+
+    tasks.forEach(task => {
+        if (!task.completed && task.due) {
+            const dueDate = new Date(task.due);
+            dueDate.setHours(0, 0, 0, 0);
+
+            if (dueDate < today) {
+                showNotification(`🚨 งานเลยกำหนด!`, `${task.name} รีบปั่นด่วน!`);
+            }
+            else if (dueDate.getTime() === today.getTime()) {
+                showNotification(`🔥 งานส่งวันนี้!`, `${task.name} (${task.subject}) หมดเขตวันนี้แล้วนะ`);
+            }
+            else if (dueDate.getTime() === tomorrow.getTime()) {
+                showNotification(`⚠️ งานส่งพรุ่งนี้`, `เตรียมส่ง: ${task.name} (${task.subject})`);
+            }
+            else if (dueDate.getTime() === next3Days.getTime()) {
+                 showNotification(`📅 อีก 3 วันส่ง`, `${task.name} อย่าลืมทำนะ`);
+            }
+        }
+    });
 }
 
 // ==========================================
 // 4. โหลดข้อมูล & จัดการงาน
 // ==========================================
 
-// โหลดวิชา (รองรับ SUBJECT_DATA จาก HTML)
 async function loadSubjects() {
     if (typeof SUBJECT_DATA !== 'undefined') {
         subjectsList = SUBJECT_DATA;
     } else {
-        // Fallback ถ้าไม่มีข้อมูลฝัง
         try {
             const response = await fetch('db.json');
             if (response.ok) subjectsList = await response.json();
@@ -71,22 +109,23 @@ async function loadSubjects() {
     }
 
     const subjectDropdown = document.getElementById('taskSubject');
-    subjectDropdown.innerHTML = '<option value="" disabled selected>-- เลือกวิชา --</option>'; 
-    
-    subjectsList.forEach(subject => {
-        const option = document.createElement('option');
-        option.value = subject.name; 
-        option.textContent = subject.name;
-        subjectDropdown.appendChild(option);
-    });
-    
-    const otherOption = document.createElement('option');
-    otherOption.value = 'other';
-    otherOption.textContent = 'วิชาอื่นๆ (พิมพ์เอง)';
-    subjectDropdown.appendChild(otherOption);
+    if(subjectDropdown) {
+        subjectDropdown.innerHTML = '<option value="" disabled selected>-- เลือกวิชา --</option>'; 
+        
+        subjectsList.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject.name; 
+            option.textContent = subject.name;
+            subjectDropdown.appendChild(option);
+        });
+        
+        const otherOption = document.createElement('option');
+        otherOption.value = 'other';
+        otherOption.textContent = 'วิชาอื่นๆ (พิมพ์เอง)';
+        subjectDropdown.appendChild(otherOption);
+    }
 }
 
-// ฟังข้อมูล Realtime จาก Firebase
 function listenToTasks() {
     const q = query(collection(db, TASKS_COLLECTION));
     document.getElementById('tasksList').innerHTML = '<div style="text-align:center; padding:20px;">⏳ กำลังโหลดข้อมูล...</div>';
@@ -95,18 +134,20 @@ function listenToTasks() {
         tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderTasks();
         updateStats();
+        checkDeadlines(); 
     }, (error) => {
         console.error("Error: ", error);
         document.getElementById('tasksList').innerHTML = '<div style="color:red; text-align:center;">❌ โหลดข้อมูลไม่สำเร็จ</div>';
     });
 }
 
-// เรนเดอร์รายการงาน (ให้ตรงกับ CSS ใหม่)
+// ==========================================
+// จุดที่แก้ไข: เพิ่มการแสดงผลป้ายสถานะ
+// ==========================================
 function renderTasks() {
     const container = document.getElementById('tasksList');
     container.innerHTML = '';
     
-    // เรียงงาน: ยังไม่เสร็จขึ้นก่อน -> ตามวันที่ส่ง
     const sortedTasks = [...tasks].sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         return new Date(a.due) - new Date(b.due);
@@ -124,17 +165,36 @@ function renderTasks() {
         const isOverdue = dueDate < today && !task.completed;
         const isUrgent = task.priority === 'urgent' && !task.completed;
         
-        let statusClass = '';
-        if (task.completed) statusClass = 'completed';
-        else if (isOverdue) statusClass = 'overdue'; // เพิ่ม class overdue ถ้าต้องการสีพิเศษ
-        else if (isUrgent) statusClass = 'urgent';
+        // --- สร้างป้ายสถานะ (Badge) ---
+        let statusBadge = '';
+        let cardClass = '';
+
+        if (task.completed) {
+            statusBadge = '<span class="status-badge status-done">✅ เสร็จแล้ว</span>';
+            cardClass = 'completed';
+        } else if (isOverdue) {
+            statusBadge = '<span class="status-badge status-overdue">🚨 เลยกำหนด</span>';
+            cardClass = 'overdue';
+        } else {
+            // เช็คว่าเป็นงานวันนี้ด้วยไหม
+            if (dueDate.getTime() === today.getTime()) {
+                 statusBadge = '<span class="status-badge status-today">🔥 ส่งวันนี้</span>';
+            } else {
+                 statusBadge = '<span class="status-badge status-pending">⏳ รอดำเนินการ</span>';
+            }
+            if (isUrgent) cardClass = 'urgent';
+        }
 
         const html = `
-            <div class="task-item ${statusClass}">
+            <div class="task-item ${cardClass}">
                 <div class="task-header">
                     <div class="task-title">${task.name}</div>
-                    <div class="task-subject">${task.subject}</div>
+                    ${statusBadge} </div>
+                
+                <div style="margin-bottom: 8px;">
+                     <span class="task-subject">${task.subject}</span>
                 </div>
+
                 <div class="task-details">
                     📅 กำหนดส่ง: ${formatThaiDate(dueDate)} <br>
                     🕒 สั่งเมื่อ: ${task.assignedOn || '-'} <br>
@@ -166,7 +226,6 @@ window.addTask = async function() {
 
     if (!name || !due) { alert('❌ กรุณากรอก "ชื่องาน" และ "กำหนดส่ง"'); return; }
     
-    // ตรวจสอบ dropdown วิชา
     let subject = document.getElementById('taskSubject').value;
     if (subject === 'other' || !subject) {
         subject = document.getElementById('taskSubjectOther').value.trim() || "งานทั่วไป";
@@ -177,7 +236,6 @@ window.addTask = async function() {
         updatedAt: new Date().toISOString()
     };
     
-    // Default ค่า completed ถ้าเป็นงานใหม่
     if (!currentEditingId) taskData.completed = false;
 
     const btn = document.getElementById('submitTaskButton');
@@ -203,14 +261,14 @@ window.addTask = async function() {
     }
 }
 
-// Helper Functions
 window.clearForm = function() {
     document.getElementById('taskName').value = '';
     document.getElementById('taskAssignedOn').value = 'ไม่ระบุ';
     document.getElementById('taskDue').value = '';
     document.getElementById('taskDescription').value = '';
     document.getElementById('taskSubject').value = '';
-    document.getElementById('taskSubjectOther').style.display = 'none';
+    const otherInput = document.getElementById('taskSubjectOther');
+    if(otherInput) otherInput.style.display = 'none';
     currentEditingId = null;
     document.getElementById('submitTaskButton').innerText = "➕ เพิ่มงาน";
 }
@@ -240,9 +298,7 @@ window.editTask = function(id) {
     document.getElementById('taskPriority').value = task.priority;
     document.getElementById('taskDescription').value = task.description || '';
     
-    // Handle Subject
     const subjectSelect = document.getElementById('taskSubject');
-    // เช็คว่าวิชามีในลิสต์ไหม ถ้าไม่มีให้เลือก 'other'
     let found = false;
     for(let i=0; i<subjectSelect.options.length; i++) {
         if(subjectSelect.options[i].value === task.subject) {
@@ -259,7 +315,6 @@ window.editTask = function(id) {
         window.checkOtherSubject(subjectSelect);
     }
 
-    // Handle AssignedOn (Dropdown)
     const assignedSelect = document.getElementById('taskAssignedOn');
     if (task.assignedOn) assignedSelect.value = task.assignedOn;
 
@@ -310,8 +365,18 @@ function formatThaiDate(dateObj) {
     });
 }
 
-// เริ่มการทำงาน
 window.onload = function() {
     loadSubjects();
     listenToTasks();
+}
+window.onload = function() {
+    loadSubjects();
+    listenToTasks();
+    
+    // +++ เพิ่มบรรทัดนี้ครับ +++
+    // เช็คว่าเคยอนุญาตไหม ถ้าเคย ให้เปิด Auto เลย
+    if (Notification.permission === 'granted') {
+        isNotificationEnabled = true;
+    }
+    updateNotificationUI(); 
 }
