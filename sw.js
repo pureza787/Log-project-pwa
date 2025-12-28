@@ -1,5 +1,5 @@
 // 1. เปลี่ยนชื่อเวอร์ชันเป็น v2 (ถ้าแก้โค้ดครั้งหน้า ให้เปลี่ยนเป็น v3, v4 ไปเรื่อยๆ)
-const CACHE_NAME = 'student-task-v2';
+const CACHE_NAME = 'student-task-v3';
 
 const ASSETS = [
   '/',
