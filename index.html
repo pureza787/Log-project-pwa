@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Task Organizer</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        .form-row-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .form-group-span-2 { grid-column: span 2; }
+        .form-group-span-3 { grid-column: span 3; }
+        
+        @media (max-width: 768px) {
+            .form-row-grid { grid-template-columns: 1fr; }
+            .form-group-span-2, .form-group-span-3 { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚งานที่กูต้องทำ</h1>
+            <p>จัดการงานและตารางเรียนของคุณ</p>
+             <p>#สั่งควยไรเยอะเยะ</p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            </div>
+
+        <div class="config-section">
+            <h3>➕ เพิ่มงานใหม่</h3>
+            
+            <div class="form-row-grid"> 
+                <div class="form-group form-group-span-2">
+                    <label for="taskName">📝 ชื่องาน:</label>
+                    <input type="text" id="taskName" placeholder="เช่น รายงาน, การบ้าน, สอบ">
+                </div>
+                
+                <div class="form-group">
+                    <label for="taskAssignedOn">🕒 วันที่สั่งงาน:</label>
+                    <select id="taskAssignedOn">
+                        <option value="ไม่ระบุ">-- กรุณาเลือก --</option>
+                        <option value="จันทร์เช้า">จันทร์เช้า</option>
+                        <option value="จันทร์บ่าย">จันทร์บ่าย</option>
+                        <option value="อังคารเช้า">อังคารเช้า</option>
+                        <option value="อังคารบ่าย">อังคารบ่าย</option>
+                        <option value="พุธเช้า">พุธเช้า</option>
+                        <option value="พุธบ่าย">พุธบ่าย</option>
+                        <option value="พฤหัสเช้า">พฤหัสเช้า</option>
+                        <option value="พฤหัสบ่าย">พฤหัสบ่าย</option>
+                        <option value="ศุกร์เช้า">ศุกร์เช้า</option>
+                        <option value="ศุกร์บ่าย">ศุกร์บ่าย</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-group-span-2">
+                    <label for="taskSubject">📚 วิชา:</label>
+                    <select id="taskSubject" onchange="window.checkOtherSubject(this)">
+                        </select>
+                    <input type="text" id="taskSubjectOther" placeholder="ระบุชื่อวิชา..." style="display: none; margin-top: 10px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="taskPriority">🔥 ความสำคัญ:</label>
+                    <select id="taskPriority">
+                        <option value="normal">🟢 ปกติ</option>
+                        <option value="important">🟡 สำคัญ</option>
+                        <option value="urgent">🔴 เร่งด่วน</option>
+                    </select>
+                </div>
+
+                <div class="form-group form-group-span-2">
+                    <label for="taskDue">📅 กำหนดส่ง / วันสอบ:</label>
+                    <input type="date" id="taskDue">
+                </div>
+
+                <div class="form-group form-group-span-3">
+                    <label for="taskDescription">📄 รายละเอียดเพิ่มเติม:</label>
+                    <textarea id="taskDescription" rows="2" placeholder="รายละเอียดงาน..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 20px;">
+                <button class="btn" id="submitTaskButton" onclick="window.addTask()">➕ เพิ่มงาน</button>
+                <button class="btn btn-warning" onclick="window.clearForm()" style="background: #999;">ล้างฟอร์ม</button>
+            </div>
+        </div>
+
+        <div class="notification-test" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+             <button class="btn btn-info" onclick="window.requestNotificationPermission()">
+                🔔 เปิดแจ้งเตือน
+            </button>
+            </div>
+
+        <div class="tasks-section">
+            <h3>📝 รายการงานทั้งหมด</h3>
+            <div id="tasksList"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUBJECT_DATA = [
+            { "code": "CC21301", "name": "CC21301 - การเขียนโปรแกรมคอมพิวเตอร์ขั้นพื้นฐาน" },
+            { "code": "CC25302", "name": "CC25302 - การออกแบบวงจรดิจิตอลและไมโครโปรเซสเซอร์" },
+            { "code": "CC25401", "name": "CC25401 - ระบบการสื่อสารและเครือข่ายไร้สาย" },
+            { "code": "CC31304", "name": "CC31304 - โปรแกรมเมเบิลลอจิกคอนโทรลเลอร์" },
+            { "code": "CC41301", "name": "CC41301 - การเตรียมความพร้อมทักษะบูรณาการฯ" },
+            { "code": "CC41303", "name": "CC41303 - การฝึกประสบการณ์วิชาชีพฯ" },
+            { "code": "CC31403", "name": "CC31403 - การเรียนรู้ของเครื่องจักรกล" },
+            { "code": "GE02202", "name": "GE02202 - โซเชียลมีเดียศึกษา" }
+        ];
+    </script>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

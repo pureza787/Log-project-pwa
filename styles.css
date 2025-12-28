@@ -1,0 +1,400 @@
+/* =========================================
+   1. Global Reset & Body
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Sarabun', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+    min-height: 100vh;
+    color: #333;
+    padding-bottom: 50px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* =========================================
+   2. Header Section
+   ========================================= */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header p {
+    margin-bottom: 5px;
+}
+
+.line-logo {
+    display: inline-block;
+    background: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    color: #00B900;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================
+   3. Stats Grid (การ์ดสถิติ)
+   ========================================= */
+.stats-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    margin-bottom: 25px;
+    padding: 5px;
+    /* ซ่อน Scrollbar */
+    scrollbar-width: none; 
+    -webkit-overflow-scrolling: touch;
+}
+
+.stats-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.stat-card {
+    background: white;
+    padding: 15px 10px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid #ddd;
+    min-width: 100px;
+    flex: 1;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    white-space: nowrap;
+}
+
+/* --- สีของ Stat Cards (แยกออกมาให้แก้ง่าย) --- */
+
+/* งานทั้งหมด (สีฟ้า) */
+.stat-card.stat-total {
+    border-top-color: #007bff;
+}
+.stat-card.stat-total .stat-number {
+    color: #007bff;
+}
+
+/* เสร็จแล้ว (สีเขียว) */
+.stat-card.stat-completed {
+    border-top-color: #28a745;
+}
+.stat-card.stat-completed .stat-number {
+    color: #28a745;
+}
+
+/* รอดำเนินการ (สีส้ม) */
+.stat-card.stat-pending {
+    border-top-color: #fd7e14;
+}
+.stat-card.stat-pending .stat-number {
+    color: #fd7e14;
+}
+
+/* เลยกำหนด (สีแดง) */
+.stat-card.stat-overdue {
+    border-top-color: #dc3545;
+}
+.stat-card.stat-overdue .stat-number {
+    color: #dc3545;
+}
+
+/* งานวันนี้ (สีม่วง) */
+.stat-card.stat-today {
+    border-top-color: #6f42c1;
+}
+.stat-card.stat-today .stat-number {
+    color: #6f42c1;
+}
+
+/* =========================================
+   4. Form & Sections (ฟอร์มและกล่องเนื้อหา)
+   ========================================= */
+.config-section, 
+.tasks-section {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-top: 5px solid #00B900;
+}
+
+.config-section h3, 
+.tasks-section h3 {
+    color: #00B900;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Grid Layout สำหรับฟอร์ม */
+.form-row-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.form-group-span-2 {
+    grid-column: span 2;
+}
+
+.form-group-span-3 {
+    grid-column: span 3;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #444;
+    font-size: 0.9rem;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+    outline: none;
+    border-color: #00B900;
+    box-shadow: 0 0 0 3px rgba(0, 185, 0, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* =========================================
+   5. Buttons (ปุ่มกด)
+   ========================================= */
+.btn {
+    background: linear-gradient(135deg, #00B900 0%, #00C851 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 185, 0, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #FFA726 0%, #FF9800 100%);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #29B6F6 0%, #2196F3 100%);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+/* =========================================
+   6. Task Items (รายการงาน)
+   ========================================= */
+.task-item {
+    background: #fff;
+    border: 1px solid #edf2ed;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+    border-left: 5px solid #00B900; /* สีเขียว Default */
+}
+
+.task-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* สถานะงาน: เสร็จแล้ว */
+.task-item.completed {
+    background: #f8fff8;
+    border-left-color: #28a745;
+    opacity: 0.8;
+}
+
+/* สถานะงาน: เร่งด่วน */
+.task-item.urgent {
+    background: #fff5f5;
+    border-left-color: #dc3545;
+}
+
+/* สถานะงาน: เลยกำหนด */
+.task-item.overdue {
+    background: #fffbf2;
+    border-left-color: #ffc107;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.task-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #333;
+    flex-grow: 1;
+}
+
+.task-subject {
+    background: #00B900;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.task-details {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.task-description {
+    background: #f1f3f4;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.task-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+.notification-test {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+/* =========================================
+   7. Responsive (มือถือ)
+   ========================================= */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 1.8rem;
+    }
+
+    /* ปรับ Grid ฟอร์มเป็น 1 แถวในมือถือ */
+    .form-row-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group-span-2, 
+    .form-group-span-3 {
+        grid-column: span 1;
+    }
+
+    .task-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .task-actions > button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
