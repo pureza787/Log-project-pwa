@@ -112,7 +112,9 @@
             </div>
         </div>
 
-    </div> <script>
+    </div> 
+    
+    <script>
         const SUBJECT_DATA = [
             { "code": "CC21301", "name": "CC21301 - การเขียนโปรแกรมคอมพิวเตอร์ขั้นพื้นฐาน" },
             { "code": "CC25302", "name": "CC25302 - การออกแบบวงจรดิจิตอลและไมโครโปรเซสเซอร์" },
@@ -123,6 +125,20 @@
             { "code": "CC31403", "name": "CC31403 - การเรียนรู้ของเครื่องจักรกล" },
             { "code": "GE02202", "name": "GE02202 - โซเชียลมีเดียศึกษา" }
         ];
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker Registered:', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('❌ SW Registration Failed:', err);
+                    });
+            });
+        }
     </script>
 
     <script type="module" src="script.js"></script>
