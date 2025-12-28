@@ -398,3 +398,82 @@ body {
         margin-bottom: 5px;
     }
 }
+/* เพิ่มต่อท้ายไฟล์ styles.css */
+
+.notification-section {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+/* =========================================
+   8. Status Badges (ป้ายสถานะ)
+   ========================================= */
+.status-badge {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: bold;
+    white-space: nowrap;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* สีสำหรับสถานะ "เสร็จแล้ว" (เขียว) */
+.status-done {
+    background-color: #28a745;
+    color: white;
+    border: 1px solid #218838;
+}
+
+/* สีสำหรับสถานะ "เลยกำหนด" (แดง) */
+.status-overdue {
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #c82333;
+}
+
+/* สีสำหรับสถานะ "รอดำเนินการ" (เหลือง/ส้ม) */
+.status-pending {
+    background-color: #ffc107;
+    color: #333;
+    border: 1px solid #e0a800;
+}
+
+/* ปรับ Header ให้ป้ายสถานะอยู่ขวาสุดเสมอ */
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+/* ปรับแต่งการแสดงผลเมื่อเสร็จแล้ว (ให้ดูจางลงนิดหน่อย) */
+.task-item.completed .task-title,
+.task-item.completed .task-details {
+    opacity: 0.6;
+    text-decoration: none; /* เอาขีดฆ่าออก เพราะมีป้ายบอกแล้ว */
+}
+/* =========================================
+   9. Notification Buttons
+   ========================================= */
+.notification-section {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 30px;
+}
+
+.notification-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* ระยะห่างระหว่างปุ่ม */
+    flex-wrap: wrap;
+}
+
+.notification-buttons button {
+    min-width: 140px; /* ให้ปุ่มกว้างเท่าๆ กัน */
+}
