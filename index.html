@@ -30,12 +30,10 @@
              <p>#สั่งควยไรเยอะเยะ</p>
         </div>
 
-        <div class="stats-grid" id="statsGrid">
-            </div>
+        <div class="stats-grid" id="statsGrid"></div>
 
         <div class="config-section">
             <h3>➕ เพิ่มงานใหม่</h3>
-            
             <div class="form-row-grid"> 
                 <div class="form-group form-group-span-2">
                     <label for="taskName">📝 ชื่องาน:</label>
@@ -92,19 +90,29 @@
             </div>
         </div>
 
-        <div class="notification-test" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-             <button class="btn btn-info" onclick="window.requestNotificationPermission()">
-                🔔 เปิดแจ้งเตือน
-            </button>
-            </div>
-
         <div class="tasks-section">
             <h3>📝 รายการงานทั้งหมด</h3>
             <div id="tasksList"></div>
         </div>
-    </div>
 
-    <script>
+        <div class="notification-section">
+            <h4 style="margin-bottom: 15px;">🔔 ตั้งค่าการแจ้งเตือน</h4>
+            
+            <p style="margin-bottom: 15px; font-size: 0.9rem;">
+                สถานะปัจจุบัน: <span id="notifStatus" style="font-weight: bold;">--</span>
+            </p>
+
+            <div class="notification-buttons">
+                <button class="btn btn-success" onclick="window.enableNotifications()">
+                    🔔 เปิดการแจ้งเตือน
+                </button>
+                <button class="btn btn-danger" onclick="window.disableNotifications()">
+                    🔕 ปิดการแจ้งเตือน
+                </button>
+            </div>
+        </div>
+
+    </div> <script>
         const SUBJECT_DATA = [
             { "code": "CC21301", "name": "CC21301 - การเขียนโปรแกรมคอมพิวเตอร์ขั้นพื้นฐาน" },
             { "code": "CC25302", "name": "CC25302 - การออกแบบวงจรดิจิตอลและไมโครโปรเซสเซอร์" },
