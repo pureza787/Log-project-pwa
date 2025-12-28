@@ -104,7 +104,7 @@ function showNotification(title, body) {
     }
 }
 
-// ฟังก์ชันเช็คกำหนดส่งงาน (ที่หายไป ผมเติมให้แล้วครับ)
+// ฟังก์ชันเช็คกำหนดส่งงาน
 function checkDeadlines() {
     // ถ้าปิดอยู่ ไม่ต้องเช็ค
     if (Notification.permission !== 'granted' || !isNotificationEnabled) return;
