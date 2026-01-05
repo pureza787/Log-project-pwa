@@ -7,12 +7,12 @@
   "theme_color": "#00B900",
   "icons": [
     {
-      "src": "https://ap-southeast-2-seek-apac.graphassets.com/AEzBCRO50TYyqbV6XzRDQz/U4CghjaRWemyeheL4p3W",
+      "src": "./logo.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://ap-southeast-2-seek-apac.graphassets.com/AEzBCRO50TYyqbV6XzRDQz/U4CghjaRWemyeheL4p3W",
+      "src": "./logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
