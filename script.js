@@ -90,7 +90,7 @@ function showNotification(title, body) {
             navigator.serviceWorker.ready.then(registration => {
                 registration.showNotification(title, {
                     body: body,
-                    icon: 'https://cdn-icons-png.flaticon.com/512/2285/2285576.png',
+                    icon: './logo.png',
                     vibrate: [200, 100, 200]
                 });
             });
@@ -98,7 +98,7 @@ function showNotification(title, body) {
             // ใช้แบบปกติ (สำหรับ PC)
             new Notification(title, { 
                 body: body, 
-                icon: 'https://cdn-icons-png.flaticon.com/512/2285/2285576.png' 
+                icon: './logo.png' 
             });
         }
     }
