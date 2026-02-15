@@ -6,6 +6,7 @@ import {
     getFirestore, collection, addDoc, onSnapshot, 
     doc, updateDoc, deleteDoc, query 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBomWqhgW1OTz4EXkSIUZDPQGNCZSOkp7M",
@@ -19,6 +20,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const TASKS_COLLECTION = "tasks";
 
 // ==========================================
@@ -283,6 +285,8 @@ function renderTasks() {
                      <span class="task-subject">${task.subject}</span>
                 </div>
 
+                ${task.imageUrl ? `<div style="margin: 10px 0;"><img src="${task.imageUrl}" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>` : ''}
+
                 <div class="task-details">
                     📅 กำหนดส่ง: ${formatThaiDate(dueDate)} <br>
                     🕒 สั่งเมื่อ: ${task.assignedOn || '-'} <br>
@@ -321,6 +325,7 @@ window.addTask = async function() {
 
     const taskData = {
         name, subject, assignedOn, due, priority, description,
+        imageUrl: null, // สำหรับเก็บ URL รูปภาพ
         updatedAt: new Date().toISOString()
     };
     
@@ -330,6 +335,23 @@ window.addTask = async function() {
     btn.disabled = true; btn.innerText = "⏳ กำลังบันทึก...";
 
     try {
+        // ถ้ามีรูปภาพ ให้อัปโหลดขึ้น Firebase Storage ก่อน
+        if (selectedImageBase64) {
+            const timestamp = new Date().getTime();
+            const imageName = `task_${currentEditingId || timestamp}_${selectedImageName}`;
+            const imageRef = ref(storage, `task-images/${imageName}`);
+            
+            // แปลง Base64 เป็น Blob
+            const response = await fetch(selectedImageBase64);
+            const blob = await response.blob();
+            
+            // อัปโหลดรูป
+            await uploadBytes(imageRef, blob);
+            
+            // ได้ URL ของรูป
+            taskData.imageUrl = await getDownloadURL(imageRef);
+        }
+
         if (currentEditingId) {
             await updateDoc(doc(db, TASKS_COLLECTION, currentEditingId), taskData);
             showNotification('แก้ไขงานสำเร็จ', `อัปเดตงาน "${name}" เรียบร้อยแล้ว`);
