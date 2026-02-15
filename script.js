@@ -40,39 +40,53 @@ function updateNotificationUI() {
     const statusEl = document.getElementById('notifStatus');
     if (!statusEl) return;
 
-    if (!('Notification' in window)) {
-        statusEl.innerHTML = "❌ ไม่รองรับ";
-        statusEl.style.color = "red";
-        return;
-    }
+    try {
+        if (!('Notification' in window)) {
+            statusEl.innerHTML = "❌ ไม่รองรับ";
+            statusEl.style.color = "red";
+            return;
+        }
 
-    if (Notification.permission === 'granted' && isNotificationEnabled) {
-        statusEl.innerHTML = "✅ เปิดใช้งานอยู่";
-        statusEl.style.color = "green";
-    } else {
-        statusEl.innerHTML = "🔕 ปิดอยู่";
-        statusEl.style.color = "gray";
+        if (Notification.permission === 'granted' && isNotificationEnabled) {
+            statusEl.innerHTML = "✅ เปิดใช้งานอยู่";
+            statusEl.style.color = "green";
+        } else {
+            statusEl.innerHTML = "🔕 ปิดอยู่";
+            statusEl.style.color = "gray";
+        }
+    } catch (e) {
+        console.warn('updateNotificationUI error:', e);
+        statusEl.innerHTML = "⚠️ ตรวจสอบไม่ได้";
+        statusEl.style.color = "orange";
     }
 }
 
 // ปุ่มเปิดการแจ้งเตือน
 window.enableNotifications = function() {
-    if (!('Notification' in window)) {
-        alert('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');
-        return;
-    }
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            isNotificationEnabled = true;
-            updateNotificationUI();
-            
-            showNotification('✅ เปิดใช้งานสำเร็จ!', 'ระบบจะแจ้งเตือนเมื่อมีงานใกล้กำหนดส่ง');
-            checkDeadlines(); // เช็คงานทันที
-        } else if (permission === 'denied') {
-            alert('❌ คุณปิดกั้นการแจ้งเตือนไว้ที่ตั้งค่าของ Browser');
-            updateNotificationUI();
+    try {
+        if (!('Notification' in window)) {
+            alert('❌ เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');
+            return;
         }
-    });
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                isNotificationEnabled = true;
+                updateNotificationUI();
+                
+                showNotification('✅ เปิดใช้งานสำเร็จ!', 'ระบบจะแจ้งเตือนเมื่อมีงานใกล้กำหนดส่ง');
+                checkDeadlines(); // เช็คงานทันที
+            } else if (permission === 'denied') {
+                alert('❌ คุณปิดกั้นการแจ้งเตือนไว้ที่ตั้งค่าของ Browser');
+                updateNotificationUI();
+            }
+        }).catch(err => {
+            console.warn('Notification permission error:', err);
+            alert('❌ ไม่สามารถขอสิทธิ์การแจ้งเตือน');
+        });
+    } catch (e) {
+        console.warn('Notification error:', e);
+        alert('❌ เกิดข้อผิดพลาดในการแจ้งเตือน');
+    }
 }
 
 // ปุ่มปิดการแจ้งเตือน
@@ -84,7 +98,10 @@ window.disableNotifications = function() {
 
 // ฟังก์ชันยิงแจ้งเตือน
 function showNotification(title, body) {
-    if (Notification.permission === 'granted' && isNotificationEnabled) {
+    try {
+        if (!('Notification' in window)) return;
+        if (Notification.permission !== 'granted' || !isNotificationEnabled) return;
+        
         // ใช้ Service Worker (สำหรับมือถือ/Android)
         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
             navigator.serviceWorker.ready.then(registration => {
@@ -92,6 +109,8 @@ function showNotification(title, body) {
                     body: body,
                     icon: './logo.png',
                     vibrate: [200, 100, 200]
+                }).catch(err => {
+                    console.warn('showNotification error:', err);
                 });
             });
         } else {
@@ -101,62 +120,70 @@ function showNotification(title, body) {
                 icon: './logo.png' 
             });
         }
+    } catch (e) {
+        console.warn('Notification error:', e);
+        // ไม่แจ้งเตือน ให้เงียบๆ ไม่ให้ error ขึ้นมา
     }
 }
 
 // ฟังก์ชันเช็คกำหนดส่งงาน
 function checkDeadlines() {
-    // ถ้าปิดอยู่ ไม่ต้องเช็ค
-    if (Notification.permission !== 'granted' || !isNotificationEnabled) return;
+    try {
+        // ถ้าปิดอยู่ ไม่ต้องเช็ค
+        if (!('Notification' in window)) return;
+        if (Notification.permission !== 'granted' || !isNotificationEnabled) return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const next3Days = new Date(today);
-    next3Days.setDate(next3Days.getDate() + 3);
+        const next3Days = new Date(today);
+        next3Days.setDate(next3Days.getDate() + 3);
 
-    tasks.forEach(task => {
-        if (!task.completed && task.due) {
-            // เช็คว่าเคยแจ้งงานนี้ไปหรือยัง (กันเด้งรัวๆ)
-            if (notifiedTaskIds.has(task.id)) return;
+        tasks.forEach(task => {
+            if (!task.completed && task.due) {
+                // เช็คว่าเคยแจ้งงานนี้ไปหรือยัง (กันเด้งรัวๆ)
+                if (notifiedTaskIds.has(task.id)) return;
 
-            const dueDate = new Date(task.due);
-            dueDate.setHours(0, 0, 0, 0);
-            
-            let shouldNotify = false;
-            let title = "";
-            let msg = "";
+                const dueDate = new Date(task.due);
+                dueDate.setHours(0, 0, 0, 0);
+                
+                let shouldNotify = false;
+                let title = "";
+                let msg = "";
 
-            if (dueDate < today) {
-                title = `🚨 งานเลยกำหนด!`;
-                msg = `${task.name} รีบปั่นด่วน!`;
-                shouldNotify = true;
+                if (dueDate < today) {
+                    title = `🚨 งานเลยกำหนด!`;
+                    msg = `${task.name} รีบปั่นด่วน!`;
+                    shouldNotify = true;
+                }
+                else if (dueDate.getTime() === today.getTime()) {
+                    title = `🔥 งานส่งวันนี้!`;
+                    msg = `${task.name} (${task.subject}) หมดเขตวันนี้แล้วนะ`;
+                    shouldNotify = true;
+                }
+                else if (dueDate.getTime() === tomorrow.getTime()) {
+                    title = `⚠️ งานส่งพรุ่งนี้`;
+                    msg = `เตรียมส่ง: ${task.name} (${task.subject})`;
+                    shouldNotify = true;
+                }
+                else if (dueDate.getTime() === next3Days.getTime()) {
+                    title = `📅 อีก 3 วันส่ง`;
+                    msg = `${task.name} อย่าลืมทำนะ`;
+                    shouldNotify = true;
+                }
+
+                if (shouldNotify) {
+                    showNotification(title, msg);
+                    notifiedTaskIds.add(task.id); // จำไว้ว่าแจ้งแล้ว
+                }
             }
-            else if (dueDate.getTime() === today.getTime()) {
-                title = `🔥 งานส่งวันนี้!`;
-                msg = `${task.name} (${task.subject}) หมดเขตวันนี้แล้วนะ`;
-                shouldNotify = true;
-            }
-            else if (dueDate.getTime() === tomorrow.getTime()) {
-                title = `⚠️ งานส่งพรุ่งนี้`;
-                msg = `เตรียมส่ง: ${task.name} (${task.subject})`;
-                shouldNotify = true;
-            }
-            else if (dueDate.getTime() === next3Days.getTime()) {
-                title = `📅 อีก 3 วันส่ง`;
-                msg = `${task.name} อย่าลืมทำนะ`;
-                shouldNotify = true;
-            }
-
-            if (shouldNotify) {
-                showNotification(title, msg);
-                notifiedTaskIds.add(task.id); // จำไว้ว่าแจ้งแล้ว
-            }
-        }
-    });
+        });
+    } catch (e) {
+        console.warn('checkDeadlines error:', e);
+    }
 }
 
 // ==========================================
@@ -328,6 +355,7 @@ window.clearForm = function() {
     document.getElementById('taskDue').value = '';
     document.getElementById('taskDescription').value = '';
     document.getElementById('taskSubject').value = '';
+    window.clearImage(); // ล้างรูปภาพด้วย
     const otherInput = document.getElementById('taskSubjectOther');
     if(otherInput) otherInput.style.display = 'none';
     currentEditingId = null;
@@ -420,10 +448,53 @@ function getPriorityLabel(p) {
     return '🟢 ปกติ';
 }
 
-function formatThaiDate(dateObj) {
-    return dateObj.toLocaleDateString('th-TH', { 
-        day: 'numeric', month: 'short', year: '2-digit' 
+// ==========================================
+// 5. ฟังก์ชันรูปภาพ
+// ==========================================
+
+let selectedImageBase64 = null;
+let selectedImageName = null;
+
+window.setupImageUpload = function() {
+    const imageInput = document.getElementById('taskImage');
+    if (!imageInput) return;
+
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // เช็คขนาดไฟล์ (ไม่เกิน 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('❌ ไฟล์ใหญ่เกินไป (สูงสุด 5MB)');
+            imageInput.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            selectedImageBase64 = event.target.result;
+            selectedImageName = file.name;
+
+            // แสดง preview
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = `
+                <div style="position: relative; display: inline-block;">
+                    <img src="${selectedImageBase64}" style="max-width: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <button type="button" class="btn btn-small btn-danger" 
+                            style="margin-top: 10px; width: 100%;" 
+                            onclick="window.clearImage()">✕ ลบรูป</button>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
     });
+}
+
+window.clearImage = function() {
+    selectedImageBase64 = null;
+    selectedImageName = null;
+    document.getElementById('taskImage').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
 }
 
 // ==========================================
@@ -432,11 +503,17 @@ function formatThaiDate(dateObj) {
 window.onload = function() {
     loadSubjects();
     listenToTasks();
+    setupImageUpload();
     
-    // เช็คสถานะแจ้งเตือนครั้งแรก
-    if (Notification.permission === 'granted') {
-        isNotificationEnabled = true;
-    } else {
+    // เช็คสถานะแจ้งเตือนครั้งแรก (ห่อด้วย try-catch เพื่อไม่ให้ error ถ้า Notification API ไม่พร้อม)
+    try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            isNotificationEnabled = true;
+        } else {
+            isNotificationEnabled = false;
+        }
+    } catch (e) {
+        console.warn('Notification API error:', e);
         isNotificationEnabled = false;
     }
     
