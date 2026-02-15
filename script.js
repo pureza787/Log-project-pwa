@@ -519,6 +519,18 @@ window.clearImage = function() {
     document.getElementById('imagePreview').innerHTML = '';
 }
 
+function getPriorityLabel(p) {
+    if(p==='urgent') return '🔴 เร่งด่วน';
+    if(p==='important') return '🟡 สำคัญ';
+    return '🟢 ปกติ';
+}
+
+function formatThaiDate(dateObj) {
+    return dateObj.toLocaleDateString('th-TH', { 
+        day: 'numeric', month: 'short', year: '2-digit' 
+    });
+}
+
 // ==========================================
 // ส่วนท้ายไฟล์: เริ่มทำงานเมื่อเปิดหน้าเว็บ
 // ==========================================
